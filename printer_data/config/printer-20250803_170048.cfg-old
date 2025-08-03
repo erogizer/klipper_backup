@@ -1,0 +1,83 @@
+#####################################################################
+#   Basic Klipper and Printer setup
+#####################################################################
+[printer]
+kinematics: corexy
+max_velocity: 500
+max_accel: 10000
+max_z_velocity: 30
+max_z_accel: 500
+square_corner_velocity: 10
+
+[force_move]
+enable_force_move: true
+
+[pause_resume]
+recover_velocity: 300
+
+[display_status]
+
+[respond]
+
+[exclude_object]
+
+[print_stats]
+
+[gcode_arcs]
+resolution = 0.05
+
+[idle_timeout]
+# only turn off motors and heaters if the printer is not paused
+gcode:
+    {% if not (printer.pause_resume.is_paused) %}
+        RESPOND MSG="Idle timeout reached"
+        TURN_OFF_HEATERS
+        M84
+    {% endif %}
+timeout: 7200
+
+#####################################################################
+#   File locations and on error handling
+#####################################################################
+[virtual_sdcard]
+path: /home/pi/printer_data/gcodes
+on_error_gcode: CANCEL_PRINT
+
+#####################################################################
+#   Includes
+#####################################################################
+[include macros/*.cfg]
+[include configs/*.cfg]
+
+## MMU Macros
+[include mmu/base/*.cfg]
+[include mmu/optional/client_macros.cfg]
+#[include mmu/addons/blobifier.cfg]
+
+#####################################################################
+#  Backup to github
+#####################################################################
+[gcode_macro update_git]
+gcode:
+    {% set message = params.MESSAGE|default() %}
+    {% if message %}
+        RUN_SHELL_COMMAND CMD=update_git_script_message PARAMS="'{params.MESSAGE}'"
+    {% else %}
+        RUN_SHELL_COMMAND CMD=update_git_script
+    {% endif %}
+
+[gcode_shell_command update_git_script]
+command: bash -c "bash $HOME/klipper-backup/script.sh"
+timeout: 180.0
+verbose: False
+
+[gcode_shell_command update_git_script_message]
+command: bash -c "bash $HOME/klipper-backup/script.sh $0"
+timeout: 180.0
+verbose: False
+
+## Timelapse
+#[include timelapse.cfg]
+
+#*# <---------------------- SAVE_CONFIG ---------------------->
+#*# DO NOT EDIT THIS BLOCK OR BELOW. The contents are auto-generated.
